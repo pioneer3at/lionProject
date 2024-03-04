@@ -74,4 +74,37 @@ PROGRAM_CONFIG_TEMPLATE = [
             {'name': 'Choose crayon direction', 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
         ]
     },
+
+    {
+        'type': '1 Book + 3 Crayon Pack - C',
+        'typeId': 'C',
+        'programId': 4,
+        'name': None,
+        'entries':
+        [
+            {'name': 'Pack 1 Quantity', 'data': 0, 'packId': 1, 'object': None, 'valid': 0},
+            {'name': 'Pack 2 Quantity', 'data': 0, 'packId': 2, 'object': None, 'valid': 0},
+            {'name': 'Pack 3 Quantity', 'data': 0, 'packId': 3, 'object': None, 'valid': 0},
+        ],
+        'steps':
+        [
+            {'name': 'Choose convey area', 'valid': False, 'stepId': 1, 'color': 'red', 'data': [0, 0, 0, 0], 'button': None, 'saveImage': False},
+            {'name': 'Choose positioning region', 'valid': False, 'stepId': 2, 'color': 'orange', 'data': [0, 0, 0, 0], 'button': None, 'saveImage': True, 'imageName': 'crayon.jpg'},
+            
+            {'name': 'Choose pack 1', 'packId': 1, 'valid': False, 'stepId': 3, 'color': 'green', 'data': [0, 0, 0, 0], 'button': None, 'saveImage': False},
+            {'name': 'Choose color areas 1', 'packId': 1, 'entryName': 'Pack 1 Quantity', 'valid': False, 'stepId': 4, 'color': 'pink', 'quantity': 0, 'data': [], 'button': None, 'saveImage': False, 'collect': 'hsv'},
+
+            {'name': 'Choose pack 2', 'packId': 2,'valid': False, 'stepId': 5, 'color': 'green', 'data': [0, 0, 0, 0], 'button': None, 'saveImage': False},
+            {'name': 'Choose color areas 2', 'packId': 2, 'entryName': 'Pack 2 Quantity', 'valid': False, 'stepId': 6, 'color': 'pink', 'quantity': 0, 'data': [], 'button': None, 'saveImage': False, 'collect': 'hsv'},
+
+            {'name': 'Choose pack 3', 'packId': 3,'valid': False, 'stepId': 7, 'color': 'green', 'data': [0, 0, 0, 0], 'button': None, 'saveImage': False},
+            {'name': 'Choose color areas 3', 'packId': 3, 'entryName': 'Pack 3 Quantity', 'valid': False, 'stepId': 8, 'color': 'pink', 'quantity': 0, 'data': [], 'button': None, 'saveImage': False, 'collect': 'hsv'},
+        ],
+        'combobox':
+        [
+            {'name': 'Choose pack 1 direction', 'packId': 1, 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
+            {'name': 'Choose pack 2 direction', 'packId': 2, 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
+            {'name': 'Choose pack 3 direction', 'packId': 3, 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
+        ]
+    },
 ]

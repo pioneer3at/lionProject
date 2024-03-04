@@ -33,7 +33,8 @@ class VideoProcessing():
             self.full_template = cv2.imread(os.path.join(program_dir, "templates/10ports.jpg"))
         elif load_prog['typeId'] == 'B':
             self.full_template = cv2.imread(os.path.join(program_dir, "templates/crayon.jpg"))
-
+        elif load_prog['typeId'] == 'C':
+            self.full_template = cv2.imread(os.path.join(program_dir, "templates/crayon.jpg"))
         self.show = show
         self.start_point = None
         self.init_counter_variables()
@@ -746,6 +747,147 @@ class VideoProcessing():
         
         return image, CORRECT, jugdement_value
 
+    def programC(self, image):
+        prog_data_file = os.path.join(self.program_dir, DATA_INFO_FILENAME)
+        load_prog = json.load(open(prog_data_file))
+        for step in load_prog['steps']:
+            if step['stepId'] == 1:
+                convey = step['data']
+            elif step['stepId'] == 2:
+                origin = step['data']
+
+            # Pack #1    
+            elif step['stepId'] == 3:
+                crayon_area_1 = step['data']
+            elif step['stepId'] == 4:
+                color_areas_1 = step['data']
+            
+            # Pack #2    
+            elif step['stepId'] == 5:
+                crayon_area_2 = step['data']
+            elif step['stepId'] == 6:
+                color_areas_2 = step['data']
+            
+            # Pack #3    
+            elif step['stepId'] == 7:
+                crayon_area_3 = step['data']
+            elif step['stepId'] == 8:
+                color_areas_3 = step['data']
+
+        for entry in load_prog['entries']:
+            if step['packId'] == 1:
+                crayon_quantity_1 = int(entry['data'])
+            elif step['packId'] == 2:
+                crayon_quantity_2 = int(entry['data'])
+            elif step['packId'] == 3:
+                crayon_quantity_3 = int(entry['data'])
+
+        for item in load_prog['combobox']:
+            if item['packId'] == 1:
+                crayon_dir_1 = item['data']
+            elif item['packId'] == 2:
+                crayon_dir_2 = item['data']
+            elif item['packId'] == 3:
+                crayon_dir_3 = item['data']
+
+        FULL_DETECTED = False
+        CRAYON_DETECTED = False
+        percent = 0
+        jugdement_value = 0
+
+        CORRECT = False
+        image = image[convey[1]:convey[3], :]
+        cv2.putText(image, "COUNTER: {}/{}".format(self.corrected_count_value, self.current_count_value), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+        if self.current_is_correct:
+            cv2.putText(image, "FOUND A CORRECT ONE", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+        if self.warning_wrong:
+            cv2.putText(image, "LAST ONE WAS CAUGHT WRONG", (50, image.shape[0]-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+
+        try:
+            full_rect = self.orb(self.full_template, image)
+            if full_rect == None: 
+                CORRECT = "full_rect"
+                print("NO BOOK -> Exception")
+            else:
+                full_rect_area = full_rect[1][0]*full_rect[1][1]
+                self.full_template_area = self.full_template.shape[0]*self.full_template.shape[1]
+                full_box = cv2.boxPoints(full_rect).astype(int)
+                
+                inside = 0
+
+                for corner in full_box:
+                    if (corner[0] > 0 and corner[0] < image.shape[1]) and (corner[1] > 0 and corner[1] < image.shape[0]) :
+                        inside += 1
+
+                if inside > 1:
+                    if full_rect_area > self.full_template_area*0.7:
+                        FULL_DETECTED = True
+                else:
+                    CORRECT = "full_rect"
+                    print("Invalid full detection: {} inside image".format(inside))
+
+            if FULL_DETECTED:
+                print("detected crayon")
+                cv2.drawContours(image, [full_box], 0, 255, 2)
+                if self.current_is_correct:
+                    if not self.passed_middle_line:
+                        cv2.putText(image, "DETECTED -> Wait for passing mid line", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+                    else:
+                        cv2.putText(image, "DETECTED -> PASSED mid line", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+
+                status = None
+                if self.need_to_detect_crayon:
+                    full_box = cv2.boxPoints(full_rect).astype(int)
+                    full_croppedRotated = self.crop_rotate(image, full_rect)
+                    if self.full_template.shape[0] > self.full_template.shape[1]:
+                        w = min(full_rect[1])
+                        h = max(full_rect[1])
+                    else:
+                        w = max(full_rect[1])
+                        h = min(full_rect[1])
+                    
+                    # Pack 1
+                    crayon_region_1 = full_croppedRotated[crayon_area_1[1]-origin[1]:crayon_area_1[3]-origin[1],
+                                        crayon_area_1[0]-origin[0]:crayon_area_1[2]-origin[0]]
+                    crayon_region_1, status_1 = self.detect_crayon_colors_hsv(crayon_region_1, color_areas_1, crayon_dir_1, origin)
+
+                    # Pack 2
+                    crayon_region_2 = full_croppedRotated[crayon_area_2[1]-origin[1]:crayon_area_2[3]-origin[1],
+                                        crayon_area_2[0]-origin[0]:crayon_area_2[2]-origin[0]]
+                    crayon_region_2, status_2 = self.detect_crayon_colors_hsv(crayon_region_2, color_areas_2, crayon_dir_2, origin)
+
+                    # Pack 3
+                    crayon_region_3 = full_croppedRotated[crayon_area_3[1]-origin[1]:crayon_area_3[3]-origin[1],
+                                        crayon_area_3[0]-origin[0]:crayon_area_3[2]-origin[0]]
+                    crayon_region_3, status_3 = self.detect_crayon_colors_hsv(crayon_region_3, color_areas_3, crayon_dir_3, origin)
+
+                    if status_1 != None and status_2!= None and status_3 != None:
+                        if status_1 and status_2 and status_3:
+                            self.need_to_detect_crayon = False
+                            self.current_is_correct = True
+                            print("Correct! Wait for passing middle line...")
+                            cv2.putText(image, "CORRECT", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+                        else:
+                            cv2.putText(image, status_1, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+                            cv2.putText(image, status_2, (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+                            cv2.putText(image, status_3, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+
+                        image[image.shape[0]-crayon_region_1.shape[0]:image.shape[0], 0:0+crayon_region_1.shape[1] ] = crayon_region_1
+                        image[image.shape[0]-crayon_region_2.shape[0]:image.shape[0], 200:200+crayon_region_2.shape[1] ] = crayon_region_2
+                        image[image.shape[0]-crayon_region_3.shape[0]:image.shape[0], 600:600+crayon_region_3.shape[1] ] = crayon_region_3
+            else:
+                full_rect = None
+                print("NO BOOK")
+                cv2.putText(image, "Waiting for a new one", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,0), 2, 2)
+
+            self.count(image, full_rect, FULL_DETECTED)
+            cv2.line(image, (int(image.shape[1]/2), 0), (int(image.shape[1]/2), int(image.shape[0])), (0,0,255), 5)
+
+        except Exception as e:
+            traceback.print_exc() 
+            cv2.putText(image, "Cannot detect", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, 2)
+        
+        return image, CORRECT, jugdement_value
     def programUPG(self, image):
         FULL_DETECTED = False
         prog_data_file = os.path.join(self.program_dir, DATA_INFO_FILENAME)

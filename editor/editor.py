@@ -221,6 +221,14 @@ class LionEditor():
                         print("FPS: {}".format(round(fps, 2)))
                         self.canvas.create_text(300, 100, text="FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
 
+                    elif self.load_prog['typeId'] == 'C':
+                        self.image = self.vp.programC(self.image)[0]
+                        time_consumed   = time.time() - start_time  
+                        fps             = 1/time_consumed
+
+                        print("FPS: {}".format(round(fps, 2)))
+                        self.canvas.create_text(300, 100, text="FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+
                 self.tk_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)))
                 self.canvas.create_image(0, 0, anchor="nw", image=self.tk_image)
             
@@ -366,7 +374,7 @@ class LionEditor():
                         step['data'] = [0, 0, 0, 0]
 
             self.review_button.config(state=DISABLED)
-            self.erase_button.config(state=DISABLED)
+            # self.erase_button.config(state=DISABLED)
         else:
             pass
 
@@ -498,7 +506,7 @@ class LionEditor():
                         item['object'].pack(padx=10, pady=5)
                         item['object'].current(0)
                 for step in prog["steps"]:
-                    if step['name'] in ['Choose LED areas', 'Choose crayon areas']:
+                    if step['name'] in ['Choose LED areas', 'Choose crayon areas', 'Choose color areas 1', 'Choose color areas 2', 'Choose color areas 3']:
                         step['button'] = Button(self.bot_frame, text=str(step['stepId'])+'. '+step['name'])
                         step['button'].config(fg='black', bg=step['color'], command=lambda obj=step['button']: self.choose_multiple_areas(obj))
                         step['button'].pack(side="left", padx=5)
@@ -602,7 +610,7 @@ class LionEditor():
             if not self.multiple_areas_choosing:
                 self.erase_rects()
                 self.review_button.config(state=NORMAL)
-                self.erase_button.config(state=NORMAL)
+                # self.erase_button.config(state=NORMAL)
         else:
             if not self.multiple_areas_choosing:
                 self.erase_rects()
