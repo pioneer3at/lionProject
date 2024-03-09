@@ -5,8 +5,8 @@ from tkinter import colorchooser
 from PIL import Image, ImageOps, ImageTk, ImageFilter, ImageGrab
 import os
 # from gsCamera import GsCamera
-# from orinHQCamera import OrinHQCamera
-from piHQCamera import PiHQCamera
+from orinHQCamera import OrinHQCamera
+# from piHQCamera import PiHQCamera
 import time
 import cv2
 import json 
@@ -135,7 +135,7 @@ class LionEditor():
 
         self.mouse_info = [0, 0, 0, 0, 0] # x, y, width, height, area
 
-        self.camera = PiHQCamera(resolution=(WIDTH, HEIGHT),framerate=FR)
+        self.camera = OrinHQCamera(resolution=(WIDTH, HEIGHT),framerate=FR)
         self.image = None
 
         self.program_config = copy.deepcopy(PROGRAM_CONFIG_TEMPLATE)
@@ -228,6 +228,15 @@ class LionEditor():
 
                         print("FPS: {}".format(round(fps, 2)))
                         self.canvas.create_text(300, 100, text="FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+
+                    elif self.load_prog['typeId'] == 'D':
+                        self.image = self.vp.programD(self.image)
+                        time_consumed   = time.time() - start_time  
+                        fps             = 1/time_consumed
+
+                        print("FPS: {}".format(round(fps, 2)))
+                        self.canvas.create_text(300, 100, text="Background Subtraction | FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+
 
                 self.tk_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)))
                 self.canvas.create_image(0, 0, anchor="nw", image=self.tk_image)

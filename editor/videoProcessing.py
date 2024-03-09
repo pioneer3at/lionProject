@@ -38,6 +38,7 @@ class VideoProcessing():
         self.show = show
         self.start_point = None
         self.init_counter_variables()
+        self.fgbg = cv2.createBackgroundSubtractorMOG2(10) # History = 30 frames
 
     def orb(self, template_img, original_img):
         try:
@@ -593,6 +594,25 @@ class VideoProcessing():
         
         return image, CORRECT, jugdement_value
     
+    def motion_detection(self, frame):
+        # frame = cv2.resize(frame, (0, 0), fx=0.50, fy=0.50)
+
+        # Get the foreground mask
+        fgmask = self.fgbg.apply(frame)
+
+        kernel = np.ones((2, 2), np.uint8)
+        # applying errosion to avoid any small motion in video
+        th = cv2.erode(fgmask, kernel)
+        # Find contours of objects
+        contours, hierarchy = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        largest_cnt = None
+        if len(sorted_contours) > 1:
+            largest_cnt = sorted_contours[0]
+        else:
+            print("No motion detection")
+        return largest_cnt
+
     def init_counter_variables(self):
         self.new_register = False
         self.left_flag = False
@@ -602,6 +622,9 @@ class VideoProcessing():
         self.need_to_detect_crayon = False
         self.current_is_correct = False
         self.warning_wrong = False
+        self.in_detecting_range = False
+        self.correct_counter = 0
+        self.incorrect_counter = 0
 
     def count(self, image, rect, detected):
         h, w, layers = image.shape
@@ -627,6 +650,8 @@ class VideoProcessing():
                 self.left_counter += 1
             if self.left_counter == MAX_LEFT_COUNTER:
                 self.left_flag = True
+                self.left_counter = 0
+
                 # in 2nd half
                 if self.passed_middle_line:
                     self.passed_middle_line = False   
@@ -645,7 +670,180 @@ class VideoProcessing():
         else:
             print(self.new_register, self.passed_middle_line, self.left_flag, detected, self.current_count_value, self.corrected_count_value)
 
+    def count_motion_detection(self, image, largest_cnt):
+        detected_motion = False
+        frame_width = image.shape[0]
+        if isinstance(largest_cnt, np.ndarray):
+            largest_area = cv2.contourArea(largest_cnt)
+            x, y, w, h = cv2.boundingRect(largest_cnt)
+            if largest_area > BACKGROUND_SUBTRACTION_MIN_AREA: # Evoid bad points on conveyor
+                # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                detected_motion = True
+            else:
+                print("No regions bigger than {}".format(BACKGROUND_SUBTRACTION_MIN_AREA))
+            
+            if detected_motion:
+                # Access into first half
+                if x < frame_width/2 and (self.left_flag or self.current_count_value == 0):
+                    self.new_register = True
+                    self.left_flag = False
+                    self.passed_middle_line = False
+                    self.current_count_value += 1
+
+                    self.need_to_detect_crayon = True
+                    self.current_is_correct = False
+                    self.warning_wrong = False
+                
+                if self.new_register:
+                    if x > frame_width/2: # passed the middle line
+                        self.passed_middle_line = True
+                        self.new_register = False
+
+            else:
+                if (self.new_register or self.passed_middle_line) and self.left_counter < MAX_LEFT_COUNTER:
+                    self.left_counter += 1
+
+                # Condition of being left
+                if self.left_counter == MAX_LEFT_COUNTER:
+                    self.left_flag = True
+                    self.left_counter = 0
+
+                    # in 2nd half
+                    if self.passed_middle_line:
+                        self.passed_middle_line = False
+
+                        # if self.current_is_correct:
+                        if int(100*self.correct_counter/(self.correct_counter+self.incorrect_counter)) > CORRECTNESS_PERCENTAGE:
+                            self.corrected_count_value += 1
+                        else:
+                            self.warning_wrong = True
+                        
+                    # or in the 1st half
+                    elif self.new_register:
+                        self.new_register = False
+                        if self.current_count_value > 0: 
+                            self.current_count_value -= 1
+                    
+                    self.correct_counter = 0
+                    self.incorrect_counter = 0
+
+        return detected_motion, largest_cnt
+
     def programB(self, image):
+        prog_data_file = os.path.join(self.program_dir, DATA_INFO_FILENAME)
+        load_prog = json.load(open(prog_data_file))
+        for step in load_prog['steps']:
+            if step['stepId'] == 1:
+                convey = step['data']
+            elif step['stepId'] == 2:
+                origin = step['data']
+            elif step['stepId'] == 3:
+                crayon_area = step['data']
+            elif step['stepId'] == 4:
+                color_areas = step['data']
+        for entry in load_prog['entries']:
+            if entry['name'] == 'Crayon Quantity':
+                crayon_quantity = int(entry['data'])
+        for item in load_prog['combobox']:
+            if item['name'] == 'Choose crayon direction':
+                crayon_dir = item['data']
+
+        FULL_DETECTED = False
+        CRAYON_DETECTED = False
+        percent = 0
+        jugdement_value = 0
+
+        CORRECT = False
+        image = image[convey[1]:convey[3], :]
+        cv2.putText(image, "COUNTER: {}/{}".format(self.corrected_count_value, self.current_count_value), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+        # if self.current_is_correct:
+        #     cv2.putText(image, "FOUND A CORRECT ONE", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+        # if self.warning_wrong:
+        #     cv2.putText(image, "LAST ONE WAS CAUGHT WRONG", (50, image.shape[0]-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+
+        try:
+            motion_detected = False
+            largest_cnt = None
+            motion_detected, largest_cnt = self.count_motion_detection(image, self.motion_detection(image))
+
+            if motion_detected:
+                if self.correct_counter+self.incorrect_counter > 0:
+                    cv2.putText(image, "Correct quantity: {} in {} ({}%)".format(self.correct_counter, (self.correct_counter+self.incorrect_counter), int(100*self.correct_counter/(self.correct_counter+self.incorrect_counter))), (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+
+                if not self.passed_middle_line:
+                    cv2.putText(image, "DETECTED -> Wait for passing mid line", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+                else:
+                    cv2.putText(image, "DETECTED -> PASSED mid line", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+
+                x, y, w, h = cv2.boundingRect(largest_cnt)
+                cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                full_rect = self.orb(self.full_template, image)
+                if full_rect == None: 
+                    CORRECT = "full_rect"
+                    print("NO BOOK -> Exception")
+                else:
+                    full_rect_area = full_rect[1][0]*full_rect[1][1]
+                    self.full_template_area = self.full_template.shape[0]*self.full_template.shape[1]
+                    full_box = cv2.boxPoints(full_rect).astype(int)
+                    
+                    inside = 0
+
+                    for corner in full_box:
+                        if (corner[0] > 0 and corner[0] < image.shape[1]) and (corner[1] > 0 and corner[1] < image.shape[0]) :
+                            inside += 1
+
+                    if inside > 1:
+                        if full_rect_area > self.full_template_area*0.7:
+                            FULL_DETECTED = True
+                    else:
+                        CORRECT = "full_rect"
+                        print("Invalid full detection: {} inside image".format(inside))
+
+                if FULL_DETECTED:
+                    print("detected crayon")
+                    cv2.drawContours(image, [full_box], 0, 255, 2)
+                    status = None
+
+                    full_box = cv2.boxPoints(full_rect).astype(int)
+                    full_croppedRotated = self.crop_rotate(image, full_rect)
+                    if self.full_template.shape[0] > self.full_template.shape[1]:
+                        w = min(full_rect[1])
+                        h = max(full_rect[1])
+                    else:
+                        w = max(full_rect[1])
+                        h = min(full_rect[1])
+                    crayon_region = full_croppedRotated[crayon_area[1]-origin[1]:crayon_area[3]-origin[1],
+                                        crayon_area[0]-origin[0]:crayon_area[2]-origin[0]]
+                    crayon_region, color_correct = self.detect_crayon_colors_hsv(crayon_region, color_areas, crayon_dir, origin)
+
+                    if color_correct:
+                        if color_correct == True:
+                            self.need_to_detect_crayon = False
+                            # self.current_is_correct = True
+                            print("Correct! Wait for passing middle line...")
+                            cv2.putText(image, "CORRECT", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+                            self.correct_counter += 1
+                        elif color_correct == "Wrong Sequence":
+                            self.incorrect_counter += 1
+                        elif color_correct != None:
+                            cv2.putText(image, color_correct, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+                        image[image.shape[0]-crayon_region.shape[0]:image.shape[0], 0:0+crayon_region.shape[1] ] = crayon_region
+
+                else:
+                    full_rect = None
+                    print("NO BOOK")
+                    cv2.putText(image, "Waiting for a new one", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,0), 2, 2)
+
+            cv2.line(image, (int(image.shape[1]/2), 0), (int(image.shape[1]/2), int(image.shape[0])), (0,0,255), 5)
+
+        except Exception as e:
+            traceback.print_exc() 
+            cv2.putText(image, "Cannot detect", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, 2)
+        
+        return image, CORRECT, jugdement_value
+
+    def programB_old(self, image):
         prog_data_file = os.path.join(self.program_dir, DATA_INFO_FILENAME)
         load_prog = json.load(open(prog_data_file))
         for step in load_prog['steps']:
@@ -888,59 +1086,21 @@ class VideoProcessing():
             cv2.putText(image, "Cannot detect", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2, 2)
         
         return image, CORRECT, jugdement_value
-    def programUPG(self, image):
-        FULL_DETECTED = False
-        prog_data_file = os.path.join(self.program_dir, DATA_INFO_FILENAME)
-        load_prog = json.load(open(prog_data_file))
-        for step in load_prog['steps']:
-            if step['stepId'] == 1:
-                convey = step['data']
-            elif step['stepId'] == 2:
-                origin = step['data']
-            elif step['stepId'] == 3:
-                areas = step['data']
+    
+    def programD(self, image):
         try:
-            image = image[convey[1]:convey[3], :]
-            full_rect = self.sift(self.full_template, image)
-            if full_rect == None: 
-                CORRECT = "full_rect"
-                print("NO BOOK -> Exception")
-            else:
-                full_rect_area = full_rect[1][0]*full_rect[1][1]
-                self.full_template_area = self.full_template.shape[0]*self.full_template.shape[1]
-                full_box = cv2.boxPoints(full_rect).astype(int)
-                inside = 0
+            cv2.putText(image, "COUNTER: {}/{}".format(self.corrected_count_value, self.current_count_value), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
+            if self.current_is_correct:
+                cv2.putText(image, "FOUND A CORRECT ONE", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, 2)
+            if self.warning_wrong:
+                cv2.putText(image, "LAST ONE WAS CAUGHT WRONG", (50, image.shape[0]-100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, 2)
 
-                for corner in full_box:
-                    if (corner[0] > 0 and corner[0] < image.shape[1]) and (corner[1] > 0 and corner[1] < image.shape[0]) :
-                        inside += 1
+            detected, largest_cnt = self.count_motion_detection(image, self.motion_detection(image))
+            if detected:
+                x, y, w, h = cv2.boundingRect(largest_cnt)
+                cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
-                if inside > 1:
-                    if full_rect_area > self.full_template_area*0.7:
-                        FULL_DETECTED = True
-                else:
-                    CORRECT = "full_rect"
-                    print("Invalid full detection: {} inside image".format(inside))
-
-            if FULL_DETECTED:
-                if full_rect:
-                    full_box = cv2.boxPoints(full_rect).astype(int)
-                    full_croppedRotated = self.crop_rotate(image, full_rect)
-
-                    if self.full_template.shape[0] > self.full_template.shape[1]:
-                        w = min(full_rect[1])
-                        h = max(full_rect[1])
-                    else:
-                        w = max(full_rect[1])
-                        h = min(full_rect[1])
-
-                    if 1:
-                        cv2.drawContours(image, [full_box], 0, 255, 2)
-                        for area in areas:
-                            image = cv2.rectangle(image, (area[0]-origin[0]+int(full_rect[0][0]-w/2), area[1]-origin[1]+int(full_rect[0][1]-h/2)), 
-                                                  (area[2]-origin[0]+int(full_rect[0][0]-w/2), area[3]-origin[1]+int(full_rect[0][1]-h/2)), (0, 255, 0), 2) 
-            else:
-                print("NO BOOK")
+            cv2.line(image, (int(image.shape[1]/2), 0), (int(image.shape[1]/2), int(image.shape[0])), (0,0,255), 5)
 
         except Exception as e:
             traceback.print_exc() 
@@ -967,127 +1127,3 @@ success = 1
 img_array = []
 pro_w = 0
 pro_h = 0
-
-# EXPORT_FRAMES = True
-# BEE_TEMPLATES_DIR = '/home/acd/templateMatching/images/beeTemplate'
-# self.crayon_templateS_DIR = '/home/acd/templateMatching/images/crayonTemplate'
-# PROJECT_DIR = '/home/acd/templateMatching'
-
-# TEMPLATE_DIR = BEE_TEMPLATES_DIR
-
-# template = cv2.imread(os.path.join(BEE_TEMPLATES_DIR, "beeVideo.jpg"))
-# img = cv2.imread(os.path.join(PROJECT_DIR, 'frame113.jpg'),cv2.COLOR_BGR2GRAY) # trainImage
-# img3 = orb(template, img)
-# plt.imshow(img3,)
-# plt.show()
-ROTATE = False
-
-# GS_FRAMES_DIR = "/home/acd/templateMatching/gs/frames"
-# GS_DIR = "/home/acd/templateMatching/gs"
-# GS_TEMPLATE_DIR = "/home/acd/templateMatching/gs/template"
-
-# BEE_TEMPLATE = cv2.imread(os.path.join(GS_TEMPLATE_DIR, "bee4.jpg"))
-# self.full_template = cv2.imread(os.path.join(GS_TEMPLATE_DIR, "full5.jpg"))
-# self.crayon_template = cv2.imread(os.path.join(GS_TEMPLATE_DIR, "crayon5.jpg"))
-# CRAYON_REF_AREA = self.crayon_template.shape[0]*self.crayon_template.shape[1]
-# CAT_TEMPLATE = cv2.imread(os.path.join(GS_TEMPLATE_DIR, "cat4.jpg"))
-
-
-# VIDEO_DIR = GS_DIR + '/video'
-# IMAGES_DIR = GS_DIR + '/images'
-# FRAMES_DIR = GS_DIR + '/frames'
-
-# CONVEY_AREA_X_RANGE = [250, 1000]
-# CONVEY_AREA_Y_RANGE = [0, 700]
-
-# COMPARE_PERCENTAGE = 75
-# DETECTED_PERCENTS = []
-
-# source_image = cv2.imread(os.path.join(FRAMES_DIR, "frame_20.jpg"))
-# # source_image = source_image[100:500, 0:0+source_image.shape[1] ]
-# cv2.imwrite(os.path.join(IMAGES_DIR, 'source_image.jpg'), source_image)
-# ROTATE = False
-# start = time.time()
-# vp = VideoProcessing()
-# out, ret, percent = vp.process_simple(source_image, show=True)
-# print("FPS: {}".format(round(1/(time.time()-start),3)))
-# cv2.imwrite(os.path.join(IMAGES_DIR, 'output.jpg'), out)
-
-# source_image = cv2.imread(os.path.join("/home/lionel/templateMatching/editor/programs/7", "train_image.jpg"))
-# # source_image = source_image[100:500, 0:0+source_image.shape[1] ]
-# # cv2.imwrite(os.path.join(IMAGES_DIR, 'source_image.jpg'), source_image)
-# ROTATE = False
-# start = time.time()
-# vp = VideoProcessing(True, "/home/lionel/templateMatching/editor/programs/7")
-# vp.need_to_detect_crayon = True
-# out = vp.programB(source_image)
-# cv2.imwrite(os.path.join("/home/lionel/templateMatching/editor/programs/7", 'output.jpg'), out[0])
-
-# SOURCE_VIDEO_DIR = "/home/acd/templateMatching/gs/video/video.h264"
-# # SOURCE_VIDEO_DIR = "/home/acd/templateMatching/gs/video/video_incorrect_3.h264"
-
-# export_frames(SOURCE_VIDEO_DIR)
-
-# vidObj = cv2.VideoCapture(SOURCE_VIDEO_DIR) 
-# count       = 0
-# TOTAL_QUAN_FOR_JUDGEMENT = 5
-# DETECTION_LIST = [False] * TOTAL_QUAN_FOR_JUDGEMENT
-# ACCEPTANCE_VALUE = TOTAL_QUAN_FOR_JUDGEMENT - 2
-
-# MAX_PERCENT = 0
-# EVER_DETECTED = False
-# EVER_DETECTED_LIST = []
-# EVER_DETECTED_MAX_ACCEPTANCE = 0
-
-# while success: 
-#     success, image = vidObj.read() 
-
-#     if image is not None:
-
-#         start_time = time.time()
-#         image, ret, percent = process_simple(image)
-#         if percent > MAX_PERCENT: MAX_PERCENT = percent
-#         time_consumed   = time.time() - start_time
-#         fps             = 1/time_consumed
-
-#         if pro_w == 0:
-#             pro_h, pro_w, layers = image.shape
-
-#         count += 1
-
-#         DETECTION_LIST.insert(len(DETECTION_LIST) - 1, DETECTION_LIST.pop(0))
-#         if ret == True:
-#             DETECTION_LIST[-1] = True
-#         else:
-#             DETECTION_LIST[-1] = False
-#         print("Frame: {} | Last {}: {}".format(count, TOTAL_QUAN_FOR_JUDGEMENT, DETECTION_LIST.count(True)))
-#         if DETECTION_LIST.count(True) > EVER_DETECTED_MAX_ACCEPTANCE: EVER_DETECTED_MAX_ACCEPTANCE = DETECTION_LIST.count(True)
-#         if DETECTION_LIST.count(True) >= ACCEPTANCE_VALUE:
-#             color = (0, 255, 0)
-#             EVER_DETECTED = True
-#             EVER_DETECTED_LIST.append(count)
-#             print("DETECTED")
-#         else:
-#             color = (255,0,0)
-#         cv2.putText(image, "FRAME: {} | fps: {} | Detection: {}/{}".format(count, round(fps, 2), DETECTION_LIST.count(True), TOTAL_QUAN_FOR_JUDGEMENT), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, 2)
-#         cv2.putText(image, str(ret), (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, 2)
-#         cv2.putText(image, str(percent), (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, 2)
-#         cv2.putText(image, "EVER_DETECTED: {} @ frame {}".format(EVER_DETECTED, EVER_DETECTED_LIST), (10, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, 2)
-        
-#         img_array.append(image)
-
-# print("MAX_PERCENT", MAX_PERCENT)
-# print("EVER_DETECTED_MAX_ACCEPTANCE", EVER_DETECTED_MAX_ACCEPTANCE)
-# print("EVER DETECTED", EVER_DETECTED)
-# if DETECTED_PERCENTS != []:
-#     print("Average DETECTED_PERCENTS: {} | Quan: {}".format(round(np.mean(DETECTED_PERCENTS),2), len(DETECTED_PERCENTS)))
-# # choose codec according to format needed
-# fourcc = cv2.VideoWriter_fourcc(*'DIVX') 
-
-# video = cv2.VideoWriter(os.path.join(VIDEO_DIR, 'detected_video.avi'), fourcc, 15, (pro_w, pro_h))
-
-# for j in range(len(img_array)):
-#     video.write(img_array[j])
-
-# cv2.destroyAllWindows()
-# video.release()

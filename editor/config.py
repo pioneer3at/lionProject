@@ -12,6 +12,10 @@ FR = 30
 MAX_LEFT_COUNTER = 10
 VIDEO_EXTENSION = ".avi"
 
+BACKGROUND_SUBTRACTION_MIN_AREA = 10000
+
+CORRECTNESS_PERCENTAGE = 75
+
 DEFAULT_VIDEO_FILENAME = 'output.avi'
 PROGRAM_CONFIG_TEMPLATE = [
     {
@@ -106,5 +110,17 @@ PROGRAM_CONFIG_TEMPLATE = [
             {'name': 'Choose pack 2 direction', 'packId': 2, 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
             {'name': 'Choose pack 3 direction', 'packId': 3, 'data': None, 'object': None, 'labelObject': None, 'options': ['Vertical', 'Horizontal']},
         ]
+    },
+    {
+        'type': 'Debug - D',
+        'typeId': 'D',
+        'programId': 5,
+        'name': None,
+        'entries':
+        [],
+        'steps':
+        [],
+        'combobox':
+        [],
     },
 ]
