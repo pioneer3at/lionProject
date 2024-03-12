@@ -1,0 +1,536 @@
+{
+    "type": "1 Book + 3 Crayon Pack - E",
+    "typeId": "E",
+    "programId": 7,
+    "name": "e",
+    "packQuantity": 3,
+    "entries": [
+        {
+            "name": "Pack 1 Quantity",
+            "data": "6",
+            "packId": 1,
+            "valid": true
+        },
+        {
+            "name": "Pack 2 Quantity",
+            "data": "18",
+            "packId": 2,
+            "valid": true
+        },
+        {
+            "name": "Pack 3 Quantity",
+            "data": "6",
+            "packId": 3,
+            "valid": true
+        }
+    ],
+    "steps": [
+        {
+            "name": "Choose convey area",
+            "multiple": false,
+            "packId": 0,
+            "valid": true,
+            "stepId": 1,
+            "color": "red",
+            "data": [
+                1178,
+                33,
+                1235,
+                653
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose full region",
+            "multiple": false,
+            "packId": 0,
+            "valid": true,
+            "stepId": 2,
+            "color": "orange",
+            "data": [
+                237,
+                47,
+                1068,
+                651
+            ],
+            "saveImage": true,
+            "imageName": "full.jpg"
+        },
+        {
+            "name": "Choose pack 1 color region",
+            "multiple": false,
+            "packId": 1,
+            "valid": true,
+            "stepId": 3,
+            "color": "green",
+            "data": [
+                263,
+                58,
+                318,
+                275
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 1",
+            "multiple": true,
+            "packId": 1,
+            "entryName": "Pack 1 Quantity",
+            "valid": true,
+            "stepId": 4,
+            "color": "pink",
+            "quantity": "6",
+            "data": [
+                [
+                    294,
+                    81,
+                    309,
+                    88,
+                    10,
+                    13,
+                    173,
+                    255,
+                    104,
+                    131
+                ],
+                [
+                    290,
+                    114,
+                    308,
+                    123,
+                    111,
+                    120,
+                    96,
+                    255,
+                    37,
+                    119
+                ],
+                [
+                    289,
+                    148,
+                    304,
+                    156,
+                    0,
+                    179,
+                    176,
+                    255,
+                    64,
+                    134
+                ],
+                [
+                    289,
+                    182,
+                    303,
+                    193,
+                    116,
+                    128,
+                    65,
+                    255,
+                    24,
+                    55
+                ],
+                [
+                    286,
+                    218,
+                    299,
+                    231,
+                    166,
+                    173,
+                    57,
+                    174,
+                    107,
+                    214
+                ],
+                [
+                    283,
+                    256,
+                    295,
+                    266,
+                    108,
+                    111,
+                    138,
+                    255,
+                    63,
+                    109
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        },
+        {
+            "name": "Choose pack 2",
+            "multiple": false,
+            "packId": 2,
+            "valid": true,
+            "stepId": 5,
+            "color": "green",
+            "data": [
+                251,
+                290,
+                1047,
+                416
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 2",
+            "multiple": true,
+            "packId": 2,
+            "entryName": "Pack 2 Quantity",
+            "valid": true,
+            "stepId": 6,
+            "color": "pink",
+            "quantity": "18",
+            "data": [
+                [
+                    267,
+                    326,
+                    284,
+                    367,
+                    53,
+                    100,
+                    5,
+                    26,
+                    86,
+                    108
+                ],
+                [
+                    315,
+                    329,
+                    330,
+                    363,
+                    60,
+                    100,
+                    81,
+                    255,
+                    2,
+                    20
+                ],
+                [
+                    356,
+                    330,
+                    371,
+                    376,
+                    7,
+                    14,
+                    167,
+                    242,
+                    58,
+                    70
+                ],
+                [
+                    400,
+                    334,
+                    412,
+                    369,
+                    11,
+                    13,
+                    173,
+                    191,
+                    127,
+                    143
+                ],
+                [
+                    441,
+                    336,
+                    455,
+                    376,
+                    15,
+                    16,
+                    100,
+                    113,
+                    168,
+                    190
+                ],
+                [
+                    488,
+                    334,
+                    501,
+                    380,
+                    120,
+                    123,
+                    75,
+                    88,
+                    150,
+                    168
+                ],
+                [
+                    528,
+                    337,
+                    544,
+                    372,
+                    129,
+                    132,
+                    163,
+                    188,
+                    77,
+                    98
+                ],
+                [
+                    576,
+                    335,
+                    593,
+                    378,
+                    93,
+                    96,
+                    223,
+                    255,
+                    94,
+                    111
+                ],
+                [
+                    623,
+                    332,
+                    639,
+                    378,
+                    38,
+                    40,
+                    226,
+                    255,
+                    149,
+                    169
+                ],
+                [
+                    671,
+                    333,
+                    686,
+                    381,
+                    95,
+                    96,
+                    247,
+                    255,
+                    152,
+                    164
+                ],
+                [
+                    709,
+                    333,
+                    733,
+                    377,
+                    68,
+                    76,
+                    114,
+                    207,
+                    85,
+                    131
+                ],
+                [
+                    757,
+                    340,
+                    773,
+                    381,
+                    74,
+                    77,
+                    244,
+                    255,
+                    89,
+                    109
+                ],
+                [
+                    805,
+                    344,
+                    820,
+                    383,
+                    104,
+                    105,
+                    242,
+                    255,
+                    184,
+                    200
+                ],
+                [
+                    854,
+                    345,
+                    863,
+                    393,
+                    24,
+                    25,
+                    247,
+                    255,
+                    219,
+                    229
+                ],
+                [
+                    895,
+                    345,
+                    907,
+                    392,
+                    11,
+                    13,
+                    239,
+                    255,
+                    213,
+                    229
+                ],
+                [
+                    929,
+                    347,
+                    950,
+                    391,
+                    0,
+                    2,
+                    210,
+                    255,
+                    130,
+                    168
+                ],
+                [
+                    976,
+                    351,
+                    991,
+                    385,
+                    171,
+                    172,
+                    172,
+                    193,
+                    150,
+                    171
+                ],
+                [
+                    1019,
+                    349,
+                    1032,
+                    381,
+                    175,
+                    177,
+                    103,
+                    115,
+                    197,
+                    216
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        },
+        {
+            "name": "Choose pack 3",
+            "multiple": false,
+            "packId": 3,
+            "valid": true,
+            "stepId": 7,
+            "color": "green",
+            "data": [
+                757,
+                50,
+                824,
+                282
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 3",
+            "multiple": true,
+            "packId": 3,
+            "entryName": "Pack 3 Quantity",
+            "valid": true,
+            "stepId": 8,
+            "color": "pink",
+            "quantity": "6",
+            "data": [
+                [
+                    784,
+                    73,
+                    796,
+                    79,
+                    107,
+                    118,
+                    112,
+                    255,
+                    53,
+                    114
+                ],
+                [
+                    793,
+                    106,
+                    806,
+                    115,
+                    54,
+                    66,
+                    32,
+                    255,
+                    23,
+                    112
+                ],
+                [
+                    795,
+                    140,
+                    812,
+                    150,
+                    24,
+                    26,
+                    112,
+                    255,
+                    133,
+                    207
+                ],
+                [
+                    799,
+                    175,
+                    808,
+                    186,
+                    60,
+                    83,
+                    30,
+                    255,
+                    33,
+                    249
+                ],
+                [
+                    793,
+                    217,
+                    806,
+                    227,
+                    4,
+                    11,
+                    185,
+                    255,
+                    152,
+                    238
+                ],
+                [
+                    795,
+                    252,
+                    805,
+                    261,
+                    0,
+                    3,
+                    163,
+                    255,
+                    122,
+                    181
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        }
+    ],
+    "combobox": [
+        {
+            "name": "Choose pack 1 direction",
+            "packId": 1,
+            "data": "Horizontal",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        },
+        {
+            "name": "Choose pack 2 direction",
+            "packId": 2,
+            "data": "Vertical",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        },
+        {
+            "name": "Choose pack 3 direction",
+            "packId": 3,
+            "data": "Horizontal",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        }
+    ]
+}

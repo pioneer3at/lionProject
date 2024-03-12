@@ -1,0 +1,280 @@
+{
+    "type": "1 Book + 3 Crayon Pack - C",
+    "typeId": "C",
+    "programId": 4,
+    "name": "C",
+    "packQuantity": 3,
+    "entries": [
+        {
+            "name": "Pack 1 Quantity",
+            "data": "2",
+            "packId": 1,
+            "valid": true
+        },
+        {
+            "name": "Pack 2 Quantity",
+            "data": "2",
+            "packId": 2,
+            "valid": true
+        },
+        {
+            "name": "Pack 3 Quantity",
+            "data": "2",
+            "packId": 3,
+            "valid": true
+        }
+    ],
+    "steps": [
+        {
+            "name": "Choose convey area",
+            "multiple": false,
+            "packId": 0,
+            "valid": true,
+            "stepId": 1,
+            "color": "red",
+            "data": [
+                914,
+                20,
+                1021,
+                631
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose pack 1 region",
+            "multiple": false,
+            "packId": 1,
+            "valid": true,
+            "stepId": 2,
+            "color": "orange",
+            "data": [
+                72,
+                60,
+                330,
+                281
+            ],
+            "saveImage": true,
+            "imageName": "pack1.jpg"
+        },
+        {
+            "name": "Choose pack 1 color region",
+            "multiple": false,
+            "packId": 1,
+            "valid": true,
+            "stepId": 3,
+            "color": "green",
+            "data": [
+                75,
+                75,
+                125,
+                281
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 1",
+            "multiple": true,
+            "packId": 1,
+            "entryName": "Pack 1 Quantity",
+            "valid": true,
+            "stepId": 4,
+            "color": "pink",
+            "quantity": "2",
+            "data": [
+                [
+                    105,
+                    95,
+                    115,
+                    104,
+                    8,
+                    11,
+                    163,
+                    222,
+                    85,
+                    113
+                ],
+                [
+                    100,
+                    160,
+                    108,
+                    167,
+                    175,
+                    179,
+                    181,
+                    227,
+                    92,
+                    114
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        },
+        {
+            "name": "Choose pack 2 region",
+            "multiple": false,
+            "packId": 2,
+            "valid": true,
+            "stepId": 5,
+            "color": "orange",
+            "data": [
+                60,
+                295,
+                836,
+                630
+            ],
+            "saveImage": true,
+            "imageName": "pack2.jpg"
+        },
+        {
+            "name": "Choose pack 2",
+            "multiple": false,
+            "packId": 2,
+            "valid": true,
+            "stepId": 6,
+            "color": "green",
+            "data": [
+                65,
+                306,
+                824,
+                399
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 2",
+            "multiple": true,
+            "packId": 2,
+            "entryName": "Pack 2 Quantity",
+            "valid": true,
+            "stepId": 7,
+            "color": "pink",
+            "quantity": "2",
+            "data": [
+                [
+                    354,
+                    330,
+                    362,
+                    364,
+                    94,
+                    96,
+                    238,
+                    255,
+                    97,
+                    107
+                ],
+                [
+                    529,
+                    330,
+                    541,
+                    367,
+                    75,
+                    77,
+                    247,
+                    255,
+                    91,
+                    106
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        },
+        {
+            "name": "Choose pack 3 region",
+            "multiple": false,
+            "packId": 3,
+            "valid": true,
+            "stepId": 8,
+            "color": "orange",
+            "data": [
+                538,
+                41,
+                837,
+                267
+            ],
+            "saveImage": true,
+            "imageName": "pack3.jpg"
+        },
+        {
+            "name": "Choose pack 3",
+            "multiple": false,
+            "packId": 3,
+            "valid": true,
+            "stepId": 9,
+            "color": "green",
+            "data": [
+                539,
+                49,
+                590,
+                268
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose color areas 3",
+            "multiple": true,
+            "packId": 3,
+            "entryName": "Pack 3 Quantity",
+            "valid": true,
+            "stepId": 10,
+            "color": "pink",
+            "quantity": "2",
+            "data": [
+                [
+                    562,
+                    100,
+                    576,
+                    108,
+                    52,
+                    64,
+                    47,
+                    242,
+                    19,
+                    58
+                ],
+                [
+                    558,
+                    173,
+                    568,
+                    179,
+                    24,
+                    25,
+                    113,
+                    146,
+                    178,
+                    191
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        }
+    ],
+    "combobox": [
+        {
+            "name": "Choose pack 1 direction",
+            "packId": 1,
+            "data": "Horizontal",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        },
+        {
+            "name": "Choose pack 2 direction",
+            "packId": 2,
+            "data": "Vertical",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        },
+        {
+            "name": "Choose pack 3 direction",
+            "packId": 3,
+            "data": "Horizontal",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        }
+    ]
+}

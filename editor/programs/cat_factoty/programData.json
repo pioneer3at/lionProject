@@ -1,0 +1,161 @@
+{
+    "type": "1 Book + 1 Crayon Pack - B",
+    "typeId": "B",
+    "programId": 3,
+    "name": "cat_factoty",
+    "entries": [
+        {
+            "name": "Crayon Quantity",
+            "data": "7",
+            "valid": true
+        }
+    ],
+    "steps": [
+        {
+            "name": "Choose convey area",
+            "valid": true,
+            "stepId": 1,
+            "color": "red",
+            "data": [
+                147,
+                272,
+                263,
+                651
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose crayon pack color + book area",
+            "valid": true,
+            "stepId": 2,
+            "color": "orange",
+            "data": [
+                612,
+                294,
+                1013,
+                603
+            ],
+            "saveImage": true,
+            "imageName": "crayon.jpg"
+        },
+        {
+            "name": "Choose crayon pack color area",
+            "valid": true,
+            "stepId": 3,
+            "color": "green",
+            "data": [
+                650,
+                337,
+                706,
+                598
+            ],
+            "saveImage": false
+        },
+        {
+            "name": "Choose crayon areas",
+            "entryName": "Crayon Quantity",
+            "valid": true,
+            "stepId": 4,
+            "color": "pink",
+            "quantity": "7",
+            "data": [
+                [
+                    656,
+                    343,
+                    691,
+                    358,
+                    3,
+                    5,
+                    118,
+                    163,
+                    157,
+                    200
+                ],
+                [
+                    660,
+                    377,
+                    696,
+                    391,
+                    6,
+                    13,
+                    191,
+                    230,
+                    157,
+                    202
+                ],
+                [
+                    662,
+                    416,
+                    691,
+                    431,
+                    31,
+                    37,
+                    67,
+                    226,
+                    143,
+                    231
+                ],
+                [
+                    661,
+                    454,
+                    686,
+                    469,
+                    36,
+                    38,
+                    153,
+                    214,
+                    163,
+                    207
+                ],
+                [
+                    656,
+                    491,
+                    693,
+                    505,
+                    97,
+                    103,
+                    107,
+                    221,
+                    83,
+                    170
+                ],
+                [
+                    664,
+                    528,
+                    691,
+                    542,
+                    143,
+                    148,
+                    102,
+                    133,
+                    87,
+                    142
+                ],
+                [
+                    676,
+                    567,
+                    694,
+                    578,
+                    63,
+                    75,
+                    30,
+                    45,
+                    159,
+                    206
+                ]
+            ],
+            "saveImage": false,
+            "collect": "hsv"
+        }
+    ],
+    "combobox": [
+        {
+            "name": "Choose crayon direction",
+            "data": "Horizontal",
+            "options": [
+                "Vertical",
+                "Horizontal"
+            ]
+        }
+    ]
+}

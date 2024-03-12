@@ -45,11 +45,19 @@ class LionEditor():
         self.bot_frame = ttk.Frame(self.root, width=1200, height=200)
         self.bot_frame.pack(side="bottom", fill="y")
 
+        # the left frame to contain the 4 buttons
+        self.info_frame = ttk.Frame(self.root, width=300, height=600)
+        self.info_frame.pack(side="left", fill="y")
+        ttk.Label(self.info_frame, text="Information", background="white").pack(side="top")
+
         # the right canvas for displaying the image
         self.canvas = ttk.Canvas(self.root, width=WIDTH, height=HEIGHT)
         self.canvas.pack()
 
         # label
+        self.info_label = ttk.Label(self.info_frame, text="", background="white")
+        self.info_label.pack(padx=0, pady=2)
+
         self.xy_label = ttk.Label(self.bot_frame, background="white")
         self.xy_label.pack(side="top", padx=0, pady=2)
 
@@ -129,6 +137,9 @@ class LionEditor():
         self.output_video = None
         self.recording_duration_label = None
         self.recording_start_time = None
+        self.step_frames = []
+        self.info_content = None
+        self.vp = None
 
         self.current_widget = None
         self.canvas.bind('<Motion>', self.on_motion)    
@@ -175,6 +186,14 @@ class LionEditor():
 
         self.camera_openning = not self.camera_openning
 
+    def show_result(self):
+        if self.vp != None:
+            if self.vp.total_quantity == 0:
+                _percentage = 0
+            elif self.vp.total_quantity > 0:
+                _percentage = int(100*self.vp.correct_quantity/self.vp.total_quantity)
+            self.info_label.config(text="Total Quantity: {} \nCorrect Quantity: {}\nYield: {} (%)".format(self.vp.total_quantity, self.vp.correct_quantity, _percentage))
+
     def stream_camera(self):
         try:
             if self.record_video_flag:
@@ -187,7 +206,7 @@ class LionEditor():
                     if self.load_prog['typeId'] == 'A':
                         self.image, ret, percent = self.vp.programA(self.image)
                         time_consumed   = time.time() - start_time  
-                        fps             = 1/time_consumed
+                        self.fps             = 1/time_consumed
 
                         DETECTION_LIST.insert(len(DETECTION_LIST) - 1, DETECTION_LIST.pop(0))
                         if ret == True:
@@ -195,7 +214,7 @@ class LionEditor():
                         else:
                             DETECTION_LIST[-1] = False
 
-                        print("FPS: {} | Last {}: {}".format(round(fps, 2), TOTAL_QUAN_FOR_JUDGEMENT, DETECTION_LIST.count(True)))
+                        print("FPS: {} | Last {}: {}".format(round(self.fps, 2), TOTAL_QUAN_FOR_JUDGEMENT, DETECTION_LIST.count(True)))
                         if DETECTION_LIST.count(True) >= ACCEPTANCE_VALUE:
                             color = (0, 255, 0)
                             EVER_DETECTED = True
@@ -209,37 +228,48 @@ class LionEditor():
                     elif self.load_prog['typeId'] == 'UPG':
                         self.image = self.vp.programUPG(self.image)
                         time_consumed   = time.time() - start_time  
-                        fps             = 1/time_consumed
+                        self.fps             = 1/time_consumed
 
-                        print("FPS: {}".format(round(fps, 2)))
+                        print("FPS: {}".format(round(self.fps, 2)))
                     
                     elif self.load_prog['typeId'] == 'B':
                         self.image = self.vp.programB(self.image)[0]
                         time_consumed   = time.time() - start_time  
-                        fps             = 1/time_consumed
+                        self.fps             = 1/time_consumed
 
-                        print("FPS: {}".format(round(fps, 2)))
-                        self.canvas.create_text(300, 100, text="FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+                        print("FPS: {}".format(round(self.fps, 2)))
+                        self.canvas.create_text(300, 100, text="FPS: {}".format(round(self.fps, 2)), fill="black", font=("Arial", 12))
 
                     elif self.load_prog['typeId'] == 'C':
                         self.image = self.vp.programC(self.image)[0]
                         time_consumed   = time.time() - start_time  
-                        fps             = 1/time_consumed
+                        self.fps             = 1/time_consumed
 
-                        print("FPS: {}".format(round(fps, 2)))
-                        self.canvas.create_text(300, 100, text="FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+                        print("FPS: {}".format(round(self.fps, 2)))
+                        self.canvas.create_text(300, 100, text="FPS: {}".format(round(self.fps, 2)), fill="black", font=("Arial", 12))
 
                     elif self.load_prog['typeId'] == 'D':
                         self.image = self.vp.programD(self.image)
                         time_consumed   = time.time() - start_time  
-                        fps             = 1/time_consumed
+                        self.fps             = 1/time_consumed
 
-                        print("FPS: {}".format(round(fps, 2)))
-                        self.canvas.create_text(300, 100, text="Background Subtraction | FPS: {}".format(round(fps, 2)), fill="black", font=("Arial", 12))
+                        print("FPS: {}".format(round(self.fps, 2)))
+                        self.canvas.create_text(300, 100, text="Background Subtraction | FPS: {}".format(round(self.fps, 2)), fill="black", font=("Arial", 12))
 
+                    elif self.load_prog['typeId'] == 'E':
+                        result      = self.vp.programE(self.image)
+                        self.image  = result[0]
+                        response    = result[2]
+                        time_consumed   = time.time() - start_time  
+                        self.fps             = int(1/time_consumed)
+
+                        print("FPS: {}".format(round(self.fps, 2)))
+                        self.canvas.create_text(300, 100, text="Background Subtraction | FPS: {}".format(round(self.fps, 2)), fill="black", font=("Arial", 12))
 
                 self.tk_image = ImageTk.PhotoImage(Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)))
                 self.canvas.create_image(0, 0, anchor="nw", image=self.tk_image)
+            
+            self.show_result()
             
             self.stream = self.root.after(int(1000/FR), self.stream_camera)  # <== start the repeating process
         
@@ -473,6 +503,7 @@ class LionEditor():
                 
                 cv2.imwrite(os.path.join(cur_prog_dir, TRAIN_IMAGE_NAME), self.image)
                 print("Saved!!!")
+                self.info_label.config(text="Saved Program!")
 
             else:
                 messagebox.showerror('Error', 'Invalid steps: {}'.format(invalid_step_id_list))
@@ -492,6 +523,8 @@ class LionEditor():
                     if entry['object']:
                         item['labelObject'].destroy()
                         item['object'].destroy()
+        for frame in self.step_frames:
+            frame.destroy()
 
     def program_modified(self, event):
         cur_prog_name = self.program_combobox.get()
@@ -500,29 +533,33 @@ class LionEditor():
 
         for prog in self.program_config:
             if prog['type'] == cur_prog_name:
+                self.step_frames = [None] * (int(prog["packQuantity"]) + 1)
+                for i in range(len(self.step_frames)):
+                    self.step_frames[i] = ttk.Frame(self.bot_frame, width=int(WIDTH/(int(prog["packQuantity"]) + 1)), height=600)
+                    self.step_frames[i].pack(side="left", fill="y")
                 if prog['entries'] != []:
                     for item in prog['entries']:
-                        item['labelObject'] = ttk.Label(self.bot_frame, text=item['name'], background="white")
+                        item['labelObject'] = ttk.Label(self.step_frames[item["packId"]], text=item['name'], background="white")
                         item['labelObject'].pack(padx=0, pady=2)
-                        item['object'] = Entry(self.bot_frame, textvariable = StringVar())
+                        item['object'] = Entry(self.step_frames[item["packId"]], textvariable = StringVar())
                         item['object'].pack(padx=0, pady=2)
                         item['object'].insert(0, str(item['data']))
                 if "combobox" in prog:
                     for item in prog["combobox"]:
-                        item['labelObject'] = ttk.Label(self.bot_frame, text=item['name'], background="white")
+                        item['labelObject'] = ttk.Label(self.step_frames[item["packId"]], text=item['name'], background="white")
                         item['labelObject'].pack(padx=0, pady=2)
-                        item['object'] = ttk.Combobox(self.bot_frame, values=item['options'], width=30, justify='center')
+                        item['object'] = ttk.Combobox(self.step_frames[item["packId"]], values=item['options'], width=30, justify='center')
                         item['object'].pack(padx=10, pady=5)
                         item['object'].current(0)
                 for step in prog["steps"]:
-                    if step['name'] in ['Choose LED areas', 'Choose crayon areas', 'Choose color areas 1', 'Choose color areas 2', 'Choose color areas 3']:
-                        step['button'] = Button(self.bot_frame, text=str(step['stepId'])+'. '+step['name'])
+                    if step['multiple']:
+                        step['button'] = Button(self.step_frames[step["packId"]], text=str(step['stepId'])+'. '+step['name'])
                         step['button'].config(fg='black', bg=step['color'], command=lambda obj=step['button']: self.choose_multiple_areas(obj))
-                        step['button'].pack(side="left", padx=5)
+                        step['button'].pack(side="top", padx=5)
                     else:
-                        step['button'] = Button(self.bot_frame, text=str(step['stepId'])+'. '+step['name'])
+                        step['button'] = Button(self.step_frames[step["packId"]], text=str(step['stepId'])+'. '+step['name'])
                         step['button'].config(fg='black', bg=step['color'], command=lambda obj=step['button']: self.set_current_step(obj))
-                        step['button'].pack(side="left", padx=5)
+                        step['button'].pack(side="top", padx=5)
 
     def choose_multiple_areas(self, widget):
         cur_prog_name = self.program_combobox.get()
